@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/pion/webrtc/v3"
 )
 
 const (
@@ -52,6 +53,8 @@ type RoomClient struct {
 	cb    func(*DataAck)
 	onerr func(error)
 	req   int32
+
+	PeerConn *webrtc.PeerConnection
 }
 
 func NewClient(ctx context.Context, ws string, rid string, rt string, si *SessionInfo, onAck func(data *DataAck), onError func(err error)) (mr *RoomClient) {

@@ -57,7 +57,7 @@ type DataHb struct {
 type DataWrtc struct {
 	DataCommon
 
-	Sdp     string `json:"offer"`
+	Sdp     string `json:"sdp"`
 	*WrtcOp `json:"op,omitempty"`
 	To      interface{} `json:"to,omitempty"`
 }
@@ -72,9 +72,13 @@ type RoomInfo struct {
 	Rid  string            `json:"rid,omitempty"` // room id
 	Pt   string            `json:"pt,omitempty"`  //"publisher" | "viewer"
 	Eg   string            `json:"eg,omitempty"`  // "native" | "agora"
-	Icfg []string          `json:"is,omitempty"`
+	Icfg `json:"icfg,omitempty"`
 
 	Req interface{} `json:"req,omitempty"`
 	Msg string      `json:"msg,omitempty"`
+}
+
+type Icfg struct {
+	Is []string `json:"is,omitempty"`
 }
 type RoomParticipant interface{} // no parcing yet

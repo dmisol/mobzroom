@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -15,7 +16,18 @@ const (
 
 func cb(data *mobzroom.DataAck) {
 	log.Println(data)
+
+	if data.S == "JOIN" && data.C == 200 {
+		if err := mr.MakePeerConn(data.B.Icfg.Is); err != nil {
+			fmt.Println(err)
+		}
+		if err := mr.SendOffer(); err != nil {
+			fmt.Println(err)
+		}
+	}
 }
+
+var mr *mobzroom.RoomClient
 
 func main() {
 
@@ -28,7 +40,7 @@ func main() {
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Hour)
-	mr := mobzroom.NewClient(ctx, url, "room"+uuid.NewString(), "m2m", si, cb, nil)
+	mr = mobzroom.NewClient(ctx, url, "room"+uuid.NewString(), "m2m", si, cb, nil)
 	mr.Join(&mobzroom.Op{RoomCreating: true, UserFaking: true}, true, true)
 	defer func() {
 		log.Println("CANCEL")
