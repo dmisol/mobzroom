@@ -82,3 +82,8 @@ type Icfg struct {
 	Is []string `json:"is,omitempty"`
 }
 type RoomParticipant interface{} // no parcing yet
+
+type IceTo struct {
+	UserId    string `json:"userId,omitempty"`
+	SessionId string `json:"sessionId,omitempty"`
+}

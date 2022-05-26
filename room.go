@@ -92,7 +92,7 @@ func (mr *RoomClient) Join(op *Op, a, v bool) {
 		Op:         *op,
 		Ve:         v,
 		Ae:         a,
-		Eg:         "agora",
+		Eg:         "native",
 	}
 	data.S = "JOIN"
 

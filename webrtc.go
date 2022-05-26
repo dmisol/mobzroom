@@ -71,7 +71,13 @@ func (mr *RoomClient) SendOffer() (err error) {
 		return
 	}
 
-	//mr.Webrtc("offer", sdp.SDP, mr.dc.Ss.UserId, &WrtcOp{})
-	mr.Webrtc("offer", sdp.SDP, "smth deprecated", nil)
+	mr.Webrtc("offer", sdp.SDP, "smth deprecated", &WrtcOp{})
+	return
+}
+
+func (mr *RoomClient) SendICE(s string) (err error) {
+	//mr.Webrtc("iceCandidate", s, &IceTo{UserId: mr.dc.Ss.UserId, SessionId: mr.dc.Ss.SessionId}, nil)
+	mr.Webrtc("iceCandidate", s, mr.dc.Ss.UserId, nil)
+	//mr.Webrtc("iceCandidate", s, mr.dc.Ss.SessionId, nil)
 	return
 }
