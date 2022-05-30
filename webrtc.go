@@ -60,18 +60,26 @@ func (mr *RoomClient) MakePeerConn(turns []string) (err error) {
 	return
 }
 
-func (mr *RoomClient) SendOffer() (err error) {
-	var sdp webrtc.SessionDescription
-	sdp, err = mr.PeerConn.CreateOffer(nil)
-	if err != nil {
-		return
-	}
+func (mr *RoomClient) SendOffer() {
+	go func() {
+		gc := webrtc.GatheringCompletePromise(mr.PeerConn)
 
-	if err = mr.PeerConn.SetLocalDescription(sdp); err != nil {
-		return
-	}
+		off, err := mr.PeerConn.CreateOffer(nil)
+		if err != nil {
+			mr.Println("create offer", err)
+			return
+		}
 
-	mr.Webrtc("offer", sdp.SDP, "smth deprecated", &WrtcOp{})
+		if err = mr.PeerConn.SetLocalDescription(off); err != nil {
+			mr.Println("set local desc", err)
+			return
+		}
+
+		<-gc
+		sdp := mr.PeerConn.LocalDescription()
+		mr.Webrtc("offer", sdp.SDP, "smth deprecated", &WrtcOp{})
+	}()
+
 	return
 }
 

@@ -30,9 +30,9 @@ type DataCommon struct {
 }
 
 type DataAck struct {
-	S string   `json:"s"` // "JOIN" etc
-	C int      `json:"c,omitempty"`
-	B RoomInfo `json:"b,omitempty"`
+	S string     `json:"s"` // "JOIN" etc
+	C int        `json:"c,omitempty"`
+	B AckContent `json:"b,omitempty"`
 }
 
 type Data struct {
@@ -67,7 +67,7 @@ type WrtcOp struct {
 	Hls     bool `json:"hlsForwarding"`
 }
 
-type RoomInfo struct {
+type AckContent struct {
 	Pps  []RoomParticipant `json:"pps,omitempty"`
 	Rid  string            `json:"rid,omitempty"` // room id
 	Pt   string            `json:"pt,omitempty"`  //"publisher" | "viewer"
@@ -76,6 +76,8 @@ type RoomInfo struct {
 
 	Req interface{} `json:"req,omitempty"`
 	Msg string      `json:"msg,omitempty"`
+
+	Sdp string `json:"sdp,omitempty"`
 }
 
 type Icfg struct {

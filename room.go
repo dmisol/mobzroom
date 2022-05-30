@@ -25,7 +25,6 @@ const (
 
 var (
 	ErrRespTo     = errors.New("Responce Timeout")
-	ErrUnackedHb  = errors.New("Unacknowledged Heartbeat")
 	ErrUnexpected = errors.New("Unexpected Signal")
 )
 
@@ -52,7 +51,6 @@ type RoomClient struct {
 
 	cb    func(*DataAck)
 	onerr func(error)
-	req   int32
 
 	PeerConn *webrtc.PeerConnection
 }
@@ -130,8 +128,6 @@ func (mr *RoomClient) Update(a, v bool) {}
 
 func (mr *RoomClient) wrrun() {
 	defer func() {
-		mr.Println("wr stopped")
-
 		data := mr.dc
 		data.S = "LEAVE"
 		a := ApiPayload{
@@ -147,7 +143,6 @@ func (mr *RoomClient) wrrun() {
 			}
 			return
 		}
-		atomic.AddInt32(&mr.req, 1)
 		mr.send(b)
 
 		atomic.StoreInt32((*int32)(&mr.State), int32(Failed))
@@ -176,12 +171,7 @@ func (mr *RoomClient) wrrun() {
 			if atomic.LoadInt32((*int32)(&mr.State)) != int32(Joined) {
 				continue
 			}
-			if hbc != 0 {
-				mr.Println("Unack'ed heartbeat")
-				if mr.onerr != nil {
-					go mr.onerr(ErrUnackedHb)
-				}
-			}
+
 			hbm.Bid = fmt.Sprintf("%d-%X", hbc, time.Now().Unix())
 			a.Data = hbm
 
@@ -194,7 +184,7 @@ func (mr *RoomClient) wrrun() {
 				}
 				continue
 			}
-			atomic.AddInt32(&mr.req, 1)
+
 			if mr.send(b) {
 				return
 			}
@@ -206,9 +196,9 @@ func (mr *RoomClient) send(b []byte) (ret bool) {
 	mr.mu.Lock()
 	defer mr.mu.Unlock()
 
-	mr.Println("tx", string(b))
+	//mr.Println("tx", string(b))
 	if err := mr.conn.WriteMessage(websocket.TextMessage, b); err != nil {
-		mr.Println("send", err)
+		//mr.Println("send", err)
 		if mr.onerr != nil {
 			go mr.onerr(err)
 		}
@@ -244,7 +234,7 @@ func (mr *RoomClient) rdrun() {
 				mr.Println("rd need to re-Join")
 				continue
 			}
-			mr.Println("rx", string(b))
+			//mr.Println("rx", string(b))
 			data := &DataAck{}
 			if err = json.Unmarshal(b, data); err != nil {
 				mr.Println("rx", err)
@@ -256,12 +246,8 @@ func (mr *RoomClient) rdrun() {
 			switch strings.ToUpper(data.S) {
 			case "JOIN":
 				atomic.StoreInt32((*int32)(&mr.State), int32(Joined))
-			case "HEARTBEAT":
-				atomic.AddInt32(&mr.req, -1)
+			case "HEARTBEAT", "KEEP_ALIVE":
 				continue
-			case "PUBLISH_LIST_CHANGED":
-			default:
-				atomic.AddInt32(&mr.req, -1)
 			}
 			if mr.cb != nil {
 				go mr.cb(data)

@@ -20,28 +20,49 @@ const (
 )
 
 func cb(data *mobzroom.DataAck) {
-	defer fmt.Println()
+	//defer fmt.Println()
 
-	if data.S == "JOIN" && data.C == 200 {
+	if data.C != 200 {
+		mr.Println("wrong ack", data)
+	}
+	switch data.S {
+	case "JOIN":
+		mr.Println("JOIN ACK")
 		if err := mr.MakePeerConn(data.B.Icfg.Is); err != nil {
 			log.Println(err)
 		}
-		mr.PeerConn.OnICECandidate(func(i *webrtc.ICECandidate) {
-			if i == nil {
-				log.Println("empty ICE")
-				return
-			}
-			fmt.Println("ice", i)
-			//if err := mr.SendICE("a=" + i.ToJSON().Candidate); err != nil {
-			if err := mr.SendICE(i.ToJSON().Candidate); err != nil {
-				log.Println(err)
-			}
-		})
-
+		/*
+			mr.PeerConn.OnICECandidate(func(i *webrtc.ICECandidate) {
+				if i == nil {
+					log.Println("empty ICE")
+					return
+				}
+				fmt.Println("ice", i)
+				//if err := mr.SendICE("a=" + i.ToJSON().Candidate); err != nil {
+				if err := mr.SendICE(i.ToJSON().Candidate); err != nil {
+					log.Println(err)
+				}
+			})
+		*/
 		populatePeerConn()
-		if err := mr.SendOffer(); err != nil {
-			log.Println(err)
+		mr.SendOffer()
+
+		return
+	case "OFFER":
+		mr.Println("OFFER ACK")
+		sdp := webrtc.SessionDescription{
+			Type: webrtc.SDPTypeAnswer,
+			SDP:  data.B.Sdp,
 		}
+
+		// todo: parse SDP, as janus responces with a=inactive for unused audio track
+		if err := mr.PeerConn.SetRemoteDescription(sdp); err != nil {
+			mr.Println("set remote desc", err)
+			return
+		}
+		return
+	case "PUBLISH_LIST_CHANGED":
+		mr.Println(data.S)
 		return
 	}
 
@@ -58,14 +79,14 @@ func populatePeerConn() (err error) {
 		log.Println(err)
 		return
 	}
-
-	// Create an audio track
-	audioTrack, err = webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{MimeType: "audio/opus"}, "audio", "pionAudio")
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
+	/*
+		// Create an audio track
+		audioTrack, err = webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{MimeType: "audio/opus"}, "audio", "pionAudio")
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	*/
 	/*transceiverVideo*/
 	_, err = mr.PeerConn.AddTransceiverFromTrack(videoTrack,
 		webrtc.RTPTransceiverInit{
@@ -76,15 +97,21 @@ func populatePeerConn() (err error) {
 		log.Println(err)
 		return
 	}
-	/*transceiverAudio*/ _, err = mr.PeerConn.AddTransceiverFromTrack(audioTrack,
-		webrtc.RTPTransceiverInit{
-			Direction: webrtc.RTPTransceiverDirectionSendonly,
-		},
-	)
+	/*
+		 _, err = mr.PeerConn.AddTransceiverFromTrack(audioTrack,	//transceiverAudio
+			webrtc.RTPTransceiverInit{
+				Direction: webrtc.RTPTransceiverDirectionSendonly,
+			},
+		)
+	*/
 	if err != nil {
 		log.Println(err)
 		return
 	}
+
+	mr.PeerConn.OnICEConnectionStateChange(func(connectionState webrtc.ICEConnectionState) {
+		log.Println("ICE State", connectionState.String())
+	})
 	return
 }
 
