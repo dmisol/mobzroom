@@ -49,7 +49,7 @@ func cb(data *mobzroom.DataAck) {
 
 		return
 	case "OFFER":
-		mr.Println("OFFER ACK", data.B.Sdp)
+		//mr.Println("OFFER ACK", data.B.Sdp)
 		sdp := webrtc.SessionDescription{
 			Type: webrtc.SDPTypeAnswer,
 			SDP:  data.B.Sdp,

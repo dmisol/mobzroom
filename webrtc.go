@@ -78,7 +78,7 @@ func (mr *RoomClient) SendOffer() {
 
 		<-gc
 		sdp := mr.PeerConn.LocalDescription()
-		mr.Println("offer", sdp.SDP)
+		//mr.Println("offer", sdp.SDP)
 		mr.Webrtc("offer", sdp.SDP, "smth deprecated", &WrtcOp{})
 	}()
 
