@@ -49,13 +49,12 @@ func cb(data *mobzroom.DataAck) {
 
 		return
 	case "OFFER":
-		mr.Println("OFFER ACK")
+		mr.Println("OFFER ACK", data.B.Sdp)
 		sdp := webrtc.SessionDescription{
 			Type: webrtc.SDPTypeAnswer,
 			SDP:  data.B.Sdp,
 		}
 
-		// todo: parse SDP, as janus responces with a=inactive for unused audio track
 		if err := mr.PeerConn.SetRemoteDescription(sdp); err != nil {
 			mr.Println("set remote desc", err)
 			return
@@ -79,32 +78,28 @@ func populatePeerConn() (err error) {
 		log.Println(err)
 		return
 	}
-	/*
-		// Create an audio track
-		audioTrack, err = webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{MimeType: "audio/opus"}, "audio", "pionAudio")
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	*/
-	/*transceiverVideo*/
-	_, err = mr.PeerConn.AddTransceiverFromTrack(videoTrack,
-		webrtc.RTPTransceiverInit{
-			Direction: webrtc.RTPTransceiverDirectionSendonly,
-		},
-	)
+
+	// Create an audio track
+	audioTrack, err = webrtc.NewTrackLocalStaticRTP(webrtc.RTPCodecCapability{MimeType: "audio/opus", ClockRate: 48000, Channels: 2, SDPFmtpLine: "minptime=10;useinbandfec=1", RTCPFeedback: nil}, "audio", "pionAudio")
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	/*
-		 _, err = mr.PeerConn.AddTransceiverFromTrack(audioTrack,	//transceiverAudio
-			webrtc.RTPTransceiverInit{
-				Direction: webrtc.RTPTransceiverDirectionSendonly,
-			},
-		)
-	*/
-	if err != nil {
+
+	if _, err = mr.PeerConn.AddTransceiverFromTrack(videoTrack,
+		webrtc.RTPTransceiverInit{
+			Direction: webrtc.RTPTransceiverDirectionSendonly,
+		},
+	); err != nil {
+		log.Println(err)
+		return
+	}
+
+	if _, err = mr.PeerConn.AddTransceiverFromTrack(audioTrack,
+		webrtc.RTPTransceiverInit{
+			Direction: webrtc.RTPTransceiverDirectionSendonly,
+		},
+	); err != nil {
 		log.Println(err)
 		return
 	}

@@ -18,6 +18,7 @@ const (
 func (mr *RoomClient) MakePeerConn(turns []string) (err error) {
 
 	m := webrtc.MediaEngine{}
+
 	if err = m.RegisterCodec(webrtc.RTPCodecParameters{
 		RTPCodecCapability: webrtc.RTPCodecCapability{
 			MimeType: "video/H264", ClockRate: 90000, Channels: 0, SDPFmtpLine: "",
@@ -29,7 +30,7 @@ func (mr *RoomClient) MakePeerConn(turns []string) (err error) {
 
 	if err = m.RegisterCodec(webrtc.RTPCodecParameters{
 		RTPCodecCapability: webrtc.RTPCodecCapability{
-			MimeType: "audio/opus", ClockRate: 48000, Channels: 0, SDPFmtpLine: "",
+			MimeType: "audio/opus", ClockRate: 48000, Channels: 2, SDPFmtpLine: "",
 		},
 		PayloadType: PayloadTypeOpus,
 	}, webrtc.RTPCodecTypeAudio); err != nil {
@@ -77,6 +78,7 @@ func (mr *RoomClient) SendOffer() {
 
 		<-gc
 		sdp := mr.PeerConn.LocalDescription()
+		mr.Println("offer", sdp.SDP)
 		mr.Webrtc("offer", sdp.SDP, "smth deprecated", &WrtcOp{})
 	}()
 
