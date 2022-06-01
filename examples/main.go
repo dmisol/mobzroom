@@ -104,9 +104,6 @@ func populatePeerConn() (err error) {
 		return
 	}
 
-	mr.PeerConn.OnICEConnectionStateChange(func(connectionState webrtc.ICEConnectionState) {
-		log.Println("ICE State", connectionState.String())
-	})
 	return
 }
 
