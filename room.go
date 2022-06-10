@@ -232,7 +232,7 @@ func (mr *RoomClient) rdrun() {
 				}
 				atomic.StoreInt32((*int32)(&mr.State), int32(Waiting))
 				mr.Println("rd need to re-Join")
-				continue
+				return
 			}
 			//mr.Println("rx", string(b))
 			data := &DataAck{}
